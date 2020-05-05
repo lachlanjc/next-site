@@ -1,8 +1,9 @@
-import { memo } from 'react';
+import { memo, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { getSlug, removeFromLast, addTagToSlug } from '../../lib/docs/utils';
 import { GITHUB_URL, REPO_NAME } from '../../lib/github/constants';
+import addLinkListener from '../../lib/add-link-listener';
 import Notification from './notification';
 import FooterFeedback from '../footer-feedback';
 import Button from '../button';
@@ -20,6 +21,22 @@ function DocsPage({ route, html, prevRoute, nextRoute }) {
   const href = '/docs/[...slug]';
   const editUrl = `${GITHUB_URL}/${REPO_NAME}/edit/canary${route.path}`;
 
+  useEffect(() => {
+    const listeners = [];
+
+    document.querySelectorAll('.docs-content a.relative').forEach(node => {
+      const nodeHref = node.getAttribute('href');
+      if (nodeHref && nodeHref[0] !== '#' && !nodeHref.startsWith(slug)) {
+        const as = addTagToSlug(nodeHref, tag);
+        listeners.push(addLinkListener(node, { href, as }));
+      }
+    });
+
+    return () => {
+      listeners.forEach(cleanUpListener => cleanUpListener());
+    };
+  }, [slug]);
+
   return (
     <div className="docs">
       <Notification>
@@ -28,7 +45,7 @@ function DocsPage({ route, html, prevRoute, nextRoute }) {
       </Notification>
 
       {/* eslint-disable-next-line */}
-      <div dangerouslySetInnerHTML={{ __html: html }} />
+      <div className="docs-content" dangerouslySetInnerHTML={{ __html: html }} />
 
       <div className="page-nav">
         {prevRoute ? (
@@ -270,7 +287,7 @@ function DocsPage({ route, html, prevRoute, nextRoute }) {
         .docs li {
           margin-bottom: 0.625rem;
         }
-        ul :global(li:before) {
+        .docs ul li:before {
           content: '-';
           color: #999999;
           position: absolute;
