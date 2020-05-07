@@ -2,6 +2,7 @@ const campaignWords = [
   'Production',
   'Pre-Rendered Apps',
   'Static Websites',
+  'the Jamstack',
   'the Enterprise',
   'the Desktop',
   'the Mobile Web',
